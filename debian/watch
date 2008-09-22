@@ -1,0 +1,2 @@
+version=3
+http://search.cpan.org/dist/Convert-ASN1/  .+/Convert-ASN1-v?(\d[\d_.-]+)\.(?:tar(?:\.gz|\.bz2)?|tgz|zip)$

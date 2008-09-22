@@ -1,0 +1,34 @@
+Format-Specification: http://wiki.debian.org/Proposals/CopyrightFormat?action=recall&rev=228
+Upstream-Name: Convert-ASN1
+Upstream-Maintainer: Graham Barr
+Upstream-Source: http://search.cpan.org/dist/Convert-ASN1/
+
+Files: *
+Copyright: © 2000-2005, Graham Barr <gbarr@pobox.com>
+License: GPL-1+ | Artistic
+ This program is free software; you can redistribute it and/or modify it
+ under the same terms as Perl itself.
+ .
+ Perl is distributed under your choice of the GNU General Public License or
+ the Artistic License.  On Debian GNU/Linux systems, the complete text of the
+ GNU General Public License can be found in `/usr/share/common-licenses/GPL'
+ and the Artistic Licence in `/usr/share/common-licenses/Artistic'.
+
+Files: inc/*
+Copyright: © 2002-2008, Brian Ingerson, Audrey Tang and Adam Kennedy.
+License: GPL-1+ | Artistic
+ This program is free software; you can redistribute it and/or modify it under
+ the same terms as Perl itself.
+
+Files: debian/*
+Copyright:
+ © 2000-2003, Davide Puricelli (evo) <evo@debian.org>
+ © 2005-2006, Florian Ragwitz <rafl@debian.org>
+ © 2008,      Mark Hymers <mhy@debian.org>
+ © 2008,      Damyan Ivanov <dmn@debian.org>
+ © 2008,      gregor herrmann <gregoa@debian.org>
+ © 2008,      Ansgar Burchardt <ansgar@43-1.org>
+License: GPL-1+ | Artistic
+ It is assumed that all contributors put their work under the same license
+ as the module itself.
+

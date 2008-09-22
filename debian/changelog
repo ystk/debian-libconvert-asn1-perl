@@ -1,0 +1,109 @@
+libconvert-asn1-perl (0.22-1) unstable; urgency=low
+
+  * New upstream release.
+  * Add myself to Uploaders.
+  * Convert debian/copyright to proposed machine-readable format.
+
+ -- Ansgar Burchardt <ansgar@43-1.org>  Mon, 22 Sep 2008 14:06:04 +0200
+
+libconvert-asn1-perl (0.21-1) unstable; urgency=low
+
+  [ gregor herrmann ]
+  * Take over for the Debian Perl Group with maintainer's permission
+    (http://lists.debian.org/debian-perl/2008/06/msg00039.html)
+  * debian/control: Added: Vcs-Svn field (source stanza); Vcs-Browser
+    field (source stanza); Homepage field (source stanza). Changed:
+    Maintainer set to Debian Perl Group <pkg-perl-
+    maintainers@lists.alioth.debian.org> (was: Florian Ragwitz
+    <rafl@debian.org>); Florian Ragwitz <rafl@debian.org> moved to
+    Uploaders.
+  * Add debian/watch.
+
+  [ Damyan Ivanov ]
+  * New upstream release. Closes: #454735 -- Make newer version available
+  * debian/copyright: update years of copyright, upstream source location
+  * replaced debian/rules with a three-liner thanks to debhelper 7
+  * add ${misc:Depends} to dependencies
+  * add myself to Uploaders
+  * package now conforms to Policy 3.8.0
+
+ -- Damyan Ivanov <dmn@debian.org>  Mon, 16 Jun 2008 11:23:01 +0300
+
+libconvert-asn1-perl (0.20-1.1) unstable; urgency=low
+
+  * Non-maintainer upload.
+  * Fix FTBFS with Perl 5.10.  Closes: #467727
+
+ -- Mark Hymers <mhy@debian.org>  Sat, 05 Apr 2008 21:08:54 +0100
+
+libconvert-asn1-perl (0.20-1) unstable; urgency=low
+
+  * New upstream release (Closes: #359052).
+    + Now works properly with "use encoding 'utf8';" (Closes: #350446).
+  * Updated the Maintainer field with my new debian.org address.
+  * Moved to DH_COMPAT 5.
+
+ -- Florian Ragwitz <rafl@debian.org>  Sun, 26 Mar 2006 15:26:21 +0200
+
+libconvert-asn1-perl (0.19-1) unstable; urgency=low
+
+  * New Maintainer (Closes: #322096).
+  * New upstream version (Closes: #306379).
+  * Moved debhelper build-dep-indep to Build-Depends.
+  * Better description.
+  * Updated Standards-Version.
+  * Using debhelper 4.
+
+ -- Florian Ragwitz <rafl@debianforum.de>  Fri, 12 Aug 2005 09:39:49 +0200
+
+libconvert-asn1-perl (0.18-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Thu, 23 Oct 2003 17:48:45 +0200
+
+libconvert-asn1-perl (0.16-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sun, 19 Jan 2003 17:16:51 +0100
+
+libconvert-asn1-perl (0.15-2) unstable; urgency=low
+
+  * debian/copyright: added a pointer to Perl license; closes: #157557.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Mon,  2 Sep 2002 10:40:30 +0200
+
+libconvert-asn1-perl (0.15-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Fri,  2 Aug 2002 12:46:44 +0200
+
+libconvert-asn1-perl (0.11-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Sat, 21 Jul 2001 14:54:08 +0200
+
+libconvert-asn1-perl (0.08-2) unstable; urgency=low
+
+  * Updated debian/rules because of perl 5.6 and new perl policy.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Thu, 15 Feb 2001 21:31:53 +0100
+
+libconvert-asn1-perl (0.08-1) unstable; urgency=low
+
+  * New upstream version.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Fri,  9 Feb 2001 16:07:26 +0100
+
+libconvert-asn1-perl (0.07-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Davide Puricelli (evo) <evo@debian.org>  Mon,  7 Aug 2000 17:22:44 +0200
+
+Local variables:
+mode: debian-changelog
+End:

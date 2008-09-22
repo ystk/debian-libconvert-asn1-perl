@@ -1,0 +1,19 @@
+Source: libconvert-asn1-perl
+Section: perl
+Priority: optional
+Maintainer: Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>
+Uploaders: Florian Ragwitz <rafl@debian.org>, Damyan Ivanov <dmn@debian.org>,
+ Ansgar Burchardt <ansgar@43-1.org>
+Build-Depends: debhelper (>= 7)
+Build-Depends-Indep: perl (>= 5.8.0-7)
+Standards-Version: 3.8.0
+Homepage: http://search.cpan.org/dist/Convert-ASN1/
+Vcs-Svn: svn://svn.debian.org/pkg-perl/trunk/libconvert-asn1-perl/
+Vcs-Browser: http://svn.debian.org/wsvn/pkg-perl/trunk/libconvert-asn1-perl/
+
+Package: libconvert-asn1-perl
+Architecture: all
+Depends: ${perl:Depends}, ${misc:Depends}
+Description: Perl module for encoding and decoding ASN.1 data structures
+ Convert::ASN1 will parse ASN.1 descriptions and will encode from and decode to
+ perl data structures using a hierarchy of references.
