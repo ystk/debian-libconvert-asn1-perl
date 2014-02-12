@@ -18,6 +18,7 @@
 %token POSTRBRACE 18
 %token DEFINED 19
 %token BY 20
+%token EXTENSION_MARKER 21
 
 %{
 # Copyright (c) 2000-2005 Graham Barr <gbarr@pobox.com>. All rights reserved.
@@ -52,6 +53,7 @@ my %base_type = (
   'RELATIVE-OID'    => [ asn_encode_tag(ASN_RELATIVE_OID),	opROID	  ],
 
   SEQUENCE	    => [ asn_encode_tag(ASN_SEQUENCE | ASN_CONSTRUCTOR), opSEQUENCE ],
+  EXPLICIT	    => [ asn_encode_tag(ASN_SEQUENCE | ASN_CONSTRUCTOR), opEXPLICIT ],
   SET               => [ asn_encode_tag(ASN_SET      | ASN_CONSTRUCTOR), opSET ],
 
   ObjectDescriptor  => [ asn_encode_tag(ASN_UNIVERSAL |  7), opSTRING ],
@@ -75,7 +77,16 @@ my %base_type = (
 
   CHOICE => [ '', opCHOICE ],
   ANY    => [ '', opANY ],
+
+  EXTENSION_MARKER => [ '', opEXTENSIONS ],
 );
+
+my $tagdefault = 1; # 0:IMPLICIT , 1:EXPLICIT default
+
+# args: class,plicit
+sub need_explicit {
+  (defined($_[0]) && (defined($_[1])?$_[1]:$tagdefault));
+}
 
 # Given an OP, wrap it in a SEQUENCE
 
@@ -83,7 +94,7 @@ sub explicit {
   my $op = shift;
   my @seq = @$op;
 
-  @seq[cTYPE,cCHILD,cVAR,cLOOP] = ('SEQUENCE',[$op],undef,undef);
+  @seq[cTYPE,cCHILD,cVAR,cLOOP] = ('EXPLICIT',[$op],undef,undef);
   @{$op}[cTAG,cOPT] = ();
 
   \@seq;
@@ -111,7 +122,7 @@ module  : WORD ASSIGN aitem
 aitem	: class plicit anyelem postrb
 		{
 		  $3->[cTAG] = $1;
-		  $$ = $2 ? explicit($3) : $3;
+		  $$ = need_explicit($1,$2) ? explicit($3) : $3;
 		}
 	| celem
 	;
@@ -136,7 +147,7 @@ selem	: seqset OF class plicit sselem optional
 		{
 		  $5->[cTAG] = $3;
 		  @{$$ = []}[cTYPE,cCHILD,cLOOP,cOPT] = ($1, [$5], 1, $6);
-		  $$ = explicit($$) if $4;
+		  $$ = explicit($$) if need_explicit($3,$4);
 		}
 	;
 
@@ -203,14 +214,42 @@ nlist1	: nitem
 nitem	: WORD class plicit anyelem
 		{
 		  @{$$=$4}[cVAR,cTAG] = ($1,$2);
-		  $$ = explicit($$) if $3;
+		  $$ = explicit($$) if need_explicit($2,$3);
+		}
+	| EXTENSION_MARKER
+		{
+		    @{$$=[]}[cTYPE] = 'EXTENSION_MARKER';
 		}
 	;
 
 
 slist	:                       { $$ = []; }
-        | slist1		{ $$ = $1; }
-	| slist1 POSTRBRACE	{ $$ = $1; }
+        | slist1
+		{
+		  my $extension = 0;
+		  $$ = [];
+		  for my $i (@{$1}) {
+		    $extension = 1 if $i->[cTYPE] eq 'EXTENSION_MARKER';
+		    $i->[cEXT] = $i->[cOPT];
+		    $i->[cEXT] = 1 if $extension;
+		    push @{$$}, $i unless $i->[cTYPE] eq 'EXTENSION_MARKER';
+		  }
+		  my $e = []; $e->[cTYPE] = 'EXTENSION_MARKER';
+		  push @{$$}, $e if $extension;
+		}
+	| slist1 POSTRBRACE
+		{
+		  my $extension = 0;
+		  $$ = [];
+		  for my $i (@{$1}) {
+		    $extension = 1 if $i->[cTYPE] eq 'EXTENSION_MARKER';
+		    $i->[cEXT] = $i->[cOPT];
+		    $i->[cEXT] = 1 if $extension;
+		    push @{$$}, $i unless $i->[cTYPE] eq 'EXTENSION_MARKER';
+		  }
+		  my $e = []; $e->[cTYPE] = 'EXTENSION_MARKER';
+		  push @{$$}, $e if $extension;
+		}
 	;
 
 slist1	: sitem
@@ -240,13 +279,17 @@ sitem	: WORD class plicit snitem
 		{
 		  @{$$=$4}[cVAR,cTAG] = ($1,$2);
 		  $$->[cOPT] = $1 if $$->[cOPT];
-		  $$ = explicit($$) if $3;
+		  $$ = explicit($$) if need_explicit($2,$3);
 		}
 	| celem
 	| class plicit onelem
 		{
 		  @{$$=$3}[cTAG] = ($1);
-		  $$ = explicit($$) if $2;
+		  $$ = explicit($$) if need_explicit($1,$2);
+		}
+	| EXTENSION_MARKER
+		{
+		    @{$$=[]}[cTYPE] = 'EXTENSION_MARKER';
 		}
 	;
 
@@ -317,6 +360,7 @@ my @stacked;
 
 sub parse {
   local(*asn) = \($_[0]);
+  $tagdefault = $_[1] eq 'EXPLICIT' ? 1 : 0;
   ($pos,$last_pos,@stacked) = ();
 
   eval {
@@ -353,11 +397,11 @@ sub compile_one {
       $op->[cTAG] = defined($op->[cTAG]) ? asn_encode_tag($op->[cTAG]): $ref->[0][cTAG];
     }
     $op->[cTAG] |= chr(ASN_CONSTRUCTOR)
-      if length $op->[cTAG] && ($op->[cTYPE] == opSET || $op->[cTYPE] == opSEQUENCE);
+      if length $op->[cTAG] && ($op->[cTYPE] == opSET || $op->[cTYPE] == opEXPLICIT || $op->[cTYPE] == opSEQUENCE);
 
     if ($op->[cCHILD]) {
       ;# If we have children we are one of
-      ;#  opSET opSEQUENCE opCHOICE
+      ;#  opSET opSEQUENCE opCHOICE opEXPLICIT
 
       compile_one($tree, $op->[cCHILD], defined($op->[cVAR]) ? $name . "." . $op->[cVAR] : $name);
 
@@ -525,6 +569,8 @@ sub yylex {
 	    \s*\]
 	|
 	  \((\d+)\)
+	|
+	  (\.\.\.)
 	)/sxgo
   ) {
 
@@ -533,11 +579,19 @@ sub yylex {
     next if defined $1; # comment or whitespace
 
     if (defined $2 or defined $3) {
+      my $ret = $+;
+
       # A comma is not required after a '}' so to aid the
       # parser we insert a fake token after any '}'
-      push @stacked, $POSTRBRACE if defined $2 and $+ eq '}';
+      if ($ret eq '}') {
+        my $p   = pos($asn);
+        my @tmp = @stacked;
+        @stacked = ();
+        pos($asn) = $p if yylex() != $COMMA;    # swallow it
+        @stacked = (@tmp, $POSTRBRACE);
+      }
 
-      return $reserved{$yylval = $+};
+      return $reserved{$yylval = $ret};
     }
 
     if (defined $4) {
@@ -559,6 +613,10 @@ sub yylex {
     if (defined $7) {
       $yylval = $+;
       return $NUMBER;
+    }
+
+    if (defined $8) {
+      return $EXTENSION_MARKER;
     }
 
     die "Internal error\n";

@@ -1,29 +1,18 @@
-#!/usr/bin/perl
-# $Id: x509decode,v 1.1 2002/02/10 16:41:28 gbarr Exp $
-# (c) 2001-2002 Norbert Klasen, DAASI International GmbH. All rights reserved.
-# This package is free software; you can redistribute it and/or
-# modify it under the same terms as Perl itself.
-#
-# decode X.509 certificates
-#
-# varable naming
-# Convert::ASN1 objects are prefixed with asn_
-# variables holding binary DER content are prefixed with der_
+#!/usr/local/bin/perl
 
-use strict;
+print "1..26\n";
 
-use Data::Dumper;
-$Data::Dumper::Indent=1;
-$Data::Dumper::Quotekeys=1;
-$Data::Dumper::Useqq=1;
+BEGIN { require 't/funcs.pl' }
 
-use Convert::ASN1 qw(:io :debug);
+use Convert::ASN1;
 
-# parse ASN.1 desciptions
+my $t = 1;
+
 my $asn = Convert::ASN1->new;
-$asn->prepare(<<ASN1) or die "prepare: ", $asn->error;
+btest $t++, $asn->prepare(<<ASN1);
 -- ASN.1 from RFC2459 and X.509(2001)
 -- Adapted for use with Convert::ASN1
+-- Id: x509decode,v 1.1 2002/02/10 16:41:28 gbarr Exp 
 
 -- attribute data types --
 
@@ -65,7 +54,8 @@ DirectoryString ::= CHOICE {
 	bmpString		BMPString,  --(SIZE (1..MAX)),
 	universalString		UniversalString,  --(SIZE (1..MAX)),
 	utf8String		UTF8String,  --(SIZE (1..MAX)),
-	ia5String		IA5String  --added for EmailAddress
+	ia5String		IA5String,  --added for EmailAddress,
+	integer			INTEGER
 	}
 
 
@@ -114,6 +104,12 @@ SubjectPublicKeyInfo ::= SEQUENCE {
 	subjectPublicKey	BIT STRING
 	}
 
+
+RSAPubKeyInfo ::=   SEQUENCE {
+	modulus INTEGER,
+	exponent INTEGER
+	}
+
 Extensions ::= SEQUENCE OF Extension  --SIZE (1..MAX) OF Extension
 
 Extension ::= SEQUENCE {
@@ -124,7 +120,7 @@ Extension ::= SEQUENCE {
 
 AlgorithmIdentifier ::= SEQUENCE {
 	algorithm		OBJECT IDENTIFIER,
-	parameters		ANY
+	parameters		ANY OPTIONAL
 	}
 
 
@@ -141,8 +137,8 @@ KeyIdentifier ::= OCTET STRING
 
 SubjectKeyIdentifier ::= KeyIdentifier
 
-
 -- key usage extension OID and syntax
+
 -- id-ce-keyUsage OBJECT IDENTIFIER ::=  { id-ce 15 }
 
 KeyUsage ::= BIT STRING --{
@@ -158,14 +154,14 @@ KeyUsage ::= BIT STRING --{
 
 
 -- private key usage period extension OID and syntax
+
 -- id-ce-privateKeyUsagePeriod OBJECT IDENTIFIER ::=  { id-ce 16 }
 
 PrivateKeyUsagePeriod ::= SEQUENCE {
      notBefore       [0]     GeneralizedTime OPTIONAL,
      notAfter        [1]     GeneralizedTime OPTIONAL }
      -- either notBefore or notAfter shall be present
-
-
+     
 -- certificate policies extension OID and syntax
 -- id-ce-certificatePolicies OBJECT IDENTIFIER ::=  { id-ce 32 }
 
@@ -174,7 +170,7 @@ CertificatePolicies ::= SEQUENCE OF PolicyInformation
 PolicyInformation ::= SEQUENCE {
      policyIdentifier   CertPolicyId,
      policyQualifiers   SEQUENCE OF
-             PolicyQualifierInfo } --OPTIONAL }
+             PolicyQualifierInfo OPTIONAL }
 
 CertPolicyId ::= OBJECT IDENTIFIER
 
@@ -234,8 +230,17 @@ GeneralName ::= CHOICE {
      iPAddress                       [7]     OCTET STRING,
      registeredID                    [8]     OBJECT IDENTIFIER }
 
+EntrustVersionInfo ::= SEQUENCE {
+              entrustVers  GeneralString,
+              entrustInfoFlags EntrustInfoFlags }
+
+EntrustInfoFlags::= BIT STRING --{
+--      keyUpdateAllowed
+--      newExtensions     (1),  -- not used
+--      pKIXCertificate   (2) } -- certificate created by pkix
+
 -- AnotherName replaces OTHER-NAME ::= TYPE-IDENTIFIER, as
--- TYPE-IDENTIFIER is not supported in the '88 ASN.1 syntax
+-- TYPE-IDENTIFIER is not supported in the 88 ASN.1 syntax
 
 AnotherName ::= SEQUENCE {
      type    OBJECT IDENTIFIER,
@@ -334,86 +339,78 @@ KeyPurposeId ::= OBJECT IDENTIFIER
 -- id-kp-ipsecTunnel     OBJECT IDENTIFIER ::= { id-kp 6 }
 -- id-kp-ipsecUser       OBJECT IDENTIFIER ::= { id-kp 7 }
 -- id-kp-timeStamping    OBJECT IDENTIFIER ::= { id-kp 8 }
+
+-- authority info access
+
+-- id-pe-authorityInfoAccess OBJECT IDENTIFIER ::= { id-pe 1 }
+
+AuthorityInfoAccessSyntax  ::=
+        SEQUENCE OF AccessDescription --SIZE (1..MAX) OF AccessDescription
+
+AccessDescription  ::=  SEQUENCE {
+        accessMethod          OBJECT IDENTIFIER,
+        accessLocation        GeneralName  }
+
+-- subject info access
+
+-- id-pe-subjectInfoAccess OBJECT IDENTIFIER ::= { id-pe 11 }
+
+SubjectInfoAccessSyntax  ::=
+        SEQUENCE OF AccessDescription --SIZE (1..MAX) OF AccessDescription
+
+-- pgp creation time
+
+PGPExtension ::= SEQUENCE {
+       version             Version, -- DEFAULT v1(0)
+       keyCreation         Time
+}
 ASN1
 
-# decoders for basic types
-my $asn_BitString = Convert::ASN1->new();
-$asn_BitString->prepare("bitString BIT STRING");
- 
-my $asn_OctetString = Convert::ASN1->new();
-$asn_OctetString->prepare("octetString OCTET STRING");
+btest $t++, my $parser = $asn->find('Certificate');
+btest $t++, my $crlp   = $asn->find('cRLDistributionPoints');
 
-# decoders for extensions
-my %extnoid2asn = (
-	'2.5.29.9' => $asn->find('SubjectDirectoryAttributes'),
-	'2.5.29.14' => $asn_OctetString, #'SubjectKeyIdentifier',
-	'2.5.29.15' => $asn_BitString, #'keyUsage',
-	'2.5.29.16' => $asn->find('PrivateKeyUsagePeriod'),
-	'2.5.29.17' => $asn->find('SubjectAltName'),
-	'2.5.29.18' => $asn->find('IssuerAltName'),
-	'2.5.29.19' => $asn->find('BasicConstraints'),
-#	'2.5.29.20' => 'cRLNumber',
-#	'2.5.29.21' => 'cRLReasons',
-#	'2.5.29.23' => 'holdInstructionCode',
-#	'2.5.29.24' => 'invalidityDate',
-#	'2.5.29.27' => 'deltaCRLIndicator',
-#	'2.5.29.28' => 'issuingDistributionPoint',
-#	'2.5.29.29' => 'certificateIssuer',
-	'2.5.29.30' => $asn->find('NameConstraints'),
-	'2.5.29.31' => $asn->find('cRLDistributionPoints'),
-	'2.5.29.32' => $asn->find('CertificatePolicies'),
-	'2.5.29.33' => $asn->find('PolicyMappings'),
-	'2.5.29.35' => $asn->find('AuthorityKeyIdentifier'),
-	'2.5.29.36' => $asn->find('PolicyConstraints'),
-	'2.5.29.37' => $asn->find('ExtKeyUsageSyntax'),
-#	'2.5.29.40' => 'cRLStreamIdentifier',
-#	'2.5.29.44' => 'cRLScope',
-#	'2.5.29.45' => 'statusReferrals',
-#	'2.5.29.46' => 'freshestCRL',
-#	'2.5.29.47' => 'orderedList',
-#	'2.5.29.51' => 'baseUpdateTime',
-#	'2.5.29.53' => 'deltaInfo',
-#	'2.5.29.54' => 'inhibitAnyPolicy',
-# netscape-cert-extensions
-	'2.16.840.1.113730.1.1' => $asn_BitString, # netscape-cert-type 
-	'2.16.840.1.113730.1.2' => $asn->find('DirectoryString'), # netscape-base-url 
-	'2.16.840.1.113730.1.3' => $asn->find('DirectoryString'), # netscape-revocation-url 
-	'2.16.840.1.113730.1.4' => $asn->find('DirectoryString'), # netscape-ca-revocation-url 
-	'2.16.840.1.113730.1.7' => $asn->find('DirectoryString'), # netscape-cert-renewal-url
-	'2.16.840.1.113730.1.8' => $asn->find('DirectoryString'), # netscape-ca-policy-url
-	'2.16.840.1.113730.1.12' => $asn->find('DirectoryString'), # netscape-ssl-server-name
-	'2.16.840.1.113730.1.13' => $asn->find('DirectoryString'), # netscape-comment
+my %certs = (
+  't/aj.cer'           => ["http://rootca.allianz.com/ad-ca/ad-ca.crl"],
+  't/aj2.cer'          => ["http://rootca.allianz.com/sc-ad-ca/sc-ad-ca.crl"],
+  't/allianz_root.cer' => ["http://rootca.allianz.com/rootca.crl"],
+  't/pgpextension.der' => ["http://ca.mayfirst.org/mfpl.crl"],
+  't/subca_2.cer'      => [
+    "ldap://ldap.treas.gov/cn=CRL1,ou=US%20Treasury%20Root%20CA,ou=Certification%20Authorities,ou=Department%20of%20the%20Treasury,o=U.S.%20Government,c=US?authorityRevocationList"
+  ],
+  't/dsacert.der'           => undef,
+  't/new_root_ca.cer'       => undef,
+  't/telesec_799972029.crt' => undef,
+  't/verisign.der'          => undef,
 );
 
-my $asn_cert = $asn->find('Certificate');
+for my $file (sort keys %certs) {
+  print "# $file\n";
+  my $cert = loadcert($file);
+  btest $t++, my $data = $parser->decode($cert);
+  $data ||= {};
+  my $extns = $data->{tbsCertificate}{extensions} || [];
 
-while ( my $filename = shift ) {
-	my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-		$atime,$mtime,$ctime,$blksize,$blocks) = stat $filename;
-	open FILE, "<$filename" or die "no such file";
-	binmode FILE;
-	my $der_cert;
-	read FILE, $der_cert, $size;
-	close FILE;
-	decodeCert( $der_cert );
+  my ($ext) = grep { $_->{'extnID'} eq '2.5.29.31' } @$extns;
+  if ($ext) {
+    my $points = $crlp->decode($ext->{'extnValue'});    # decode the value
+    $points = $points && $points->[0]->{'distributionPoint'}->{'fullName'};
+    btest $t++, !$crlp->error or warn($crlp->error);
+    my @points = grep $_, map { $_->{'uniformResourceIdentifier'} } @{$points || []};
+    rtest $t++, $certs{$file}, \@points;
+  }
+  else {
+    btest $t++, !$certs{$file};
+  }
 }
 
-sub decodeCert() {
-	my $der_cert = shift;
-	#asn_dump( $der_cert );
-
-	my $cert = $asn_cert->decode($der_cert) or die $asn_cert->error;
-	
-	#extensions
-	foreach my $extension ( @{$cert->{'tbsCertificate'}->{'extensions'}} ) {
-		#print "extension: ", $oid2extension{$extension->{'extnID'}}, "\n";
-		if ( exists $extnoid2asn{$extension->{'extnID'}} ) {
-			$extension->{'extnValue'} = ($extnoid2asn{$extension->{'extnID'}})->decode( $extension->{'extnValue'} );
-		} else {
-			print STDERR "unknown ", $extension->{'critical'} ? "critical " : "", "extension: ", $extension->{'extnID'}, "\n";
-			asn_dump( $extension->{'extnValue'} );
-		}
-	}
-	
-	print Dumper( $cert );
+sub loadcert {
+  my $file = shift;
+  open FILE, $file || die "cannot load test certificate" . $file . "\n";
+  binmode FILE;    # HELLO Windows, dont fuss with this
+  my $holdTerminator = $/;
+  undef $/;        # using slurp mode to read the DER-encoded binary certificate
+  my $cert = <FILE>;
+  $/ = $holdTerminator;
+  close FILE;
+  return $cert;
 }
