@@ -1,3 +1,22 @@
+libconvert-asn1-perl (0.27-1) unstable; urgency=low
+
+  [ gregor herrmann ]
+  * debian/control: update {versioned,alternative} (build) dependencies.
+
+  [ Salvatore Bonaccorso ]
+  * Change Vcs-Git to canonical URI (git://anonscm.debian.org)
+  * Change search.cpan.org based URIs to metacpan.org based URIs
+
+  [ gregor herrmann ]
+  * Strip trailing slash from metacpan URLs.
+
+  * New upstream release.
+  * Update years of upstream and packaging copyright.
+  * Switch order of Math::BigInt (build) dependency.
+  * Declare compliance with Debian Policy 3.9.5.
+
+ -- gregor herrmann <gregoa@debian.org>  Thu, 26 Jun 2014 19:35:22 +0200
+
 libconvert-asn1-perl (0.26-1) unstable; urgency=low
 
   * New upstream release.

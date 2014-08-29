@@ -1,22 +1,23 @@
 Source: libconvert-asn1-perl
-Section: perl
-Priority: optional
 Maintainer: Debian Perl Group <pkg-perl-maintainers@lists.alioth.debian.org>
 Uploaders: Damyan Ivanov <dmn@debian.org>,
- Ansgar Burchardt <ansgar@debian.org>,
- gregor herrmann <gregoa@debian.org>
+           Ansgar Burchardt <ansgar@debian.org>,
+           gregor herrmann <gregoa@debian.org>
+Section: perl
+Priority: optional
 Build-Depends: debhelper (>= 8)
 Build-Depends-Indep: perl,
- libmath-bigint-perl (>= 1.997) | perl (>= 5.15.3)
-Standards-Version: 3.9.3
-Homepage: http://search.cpan.org/dist/Convert-ASN1/
-Vcs-Git: git://git.debian.org/pkg-perl/packages/libconvert-asn1-perl.git
+                     perl (>= 5.15.3) | libmath-bigint-perl
+Standards-Version: 3.9.5
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-perl/packages/libconvert-asn1-perl.git
+Vcs-Git: git://anonscm.debian.org/pkg-perl/packages/libconvert-asn1-perl.git
+Homepage: https://metacpan.org/release/Convert-ASN1
 
 Package: libconvert-asn1-perl
 Architecture: all
-Depends: ${perl:Depends}, ${misc:Depends},
- libmath-bigint-perl (>= 1.997) | perl (>= 5.15.3)
+Depends: ${perl:Depends},
+         ${misc:Depends},
+         perl (>= 5.15.3) | libmath-bigint-perl
 Description: Perl module for encoding and decoding ASN.1 data structures
  Convert::ASN1 will parse ASN.1 descriptions and will encode from and decode to
  perl data structures using a hierarchy of references.

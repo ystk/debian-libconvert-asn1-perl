@@ -1,10 +1,10 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: Convert-ASN1
 Upstream-Contact: Graham Barr
-Source: http://search.cpan.org/dist/Convert-ASN1/
+Source: https://metacpan.org/release/Convert-ASN1
 
 Files: *
-Copyright: 2000-2012, Graham Barr <gbarr@pobox.com>
+Copyright: 2000-2014, Graham Barr <gbarr@pobox.com>
 License: Artistic or GPL-1+
 
 Files: t/*.cer t/*.der t/*.crt
@@ -15,12 +15,12 @@ License: Artistic or GPL-1+
 Comment: taken from libcrypt-x509-perl
 
 Files: debian/*
-Copyright: 
+Copyright:
  2000-2003, Davide Puricelli (evo) <evo@debian.org>
  2005-2006, Florian Ragwitz <rafl@debian.org>
  2008,      Mark Hymers <mhy@debian.org>
  2008,      Damyan Ivanov <dmn@debian.org>
- 2008-2012, gregor herrmann <gregoa@debian.org>
+ 2008-2014, gregor herrmann <gregoa@debian.org>
  2008,      Ansgar Burchardt <ansgar@debian.org>
 License: Artistic or GPL-1+
 
